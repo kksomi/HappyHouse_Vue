@@ -5,27 +5,22 @@
     </h3>
     <b-row>
       <b-col></b-col>
-      <b-col cols="10">
-        <b-jumbotron
-          bg-variant="muted"
-          text-variant="dark"
-          border-variant="dark"
-        >
-          <template #header>Happy House</template>
-
-          <hr class="my-4" />
-        </b-jumbotron>
-      </b-col>
+      <news-view></news-view>
       <b-col></b-col>
     </b-row>
   </b-container>
 </template>
 
 <script>
+import NewsView from "@/components/main/NewsView.vue";
+
 export default {
   name: "HomeView",
   props: {
     msg: String,
+  },
+  components: {
+    NewsView,
   },
 };
 </script>

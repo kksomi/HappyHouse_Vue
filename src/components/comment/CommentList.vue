@@ -27,6 +27,7 @@
               <b-link
                 style="color: #b82647"
                 @click="deleteComment(comment.commentno)"
+                v-if="comment.userid === userInfo.id || userInfo.role === 1"
                 >삭제</b-link
               ></b-td
             >
@@ -38,9 +39,13 @@
 </template>
 
 <script>
-import http from "@/api/http";
+import apiInstance from "@/api/index.js";
 import moment from "moment";
+import { mapState } from "vuex";
 
+const memberStore = "memberStore";
+
+const api = apiInstance();
 export default {
   name: "CommentList",
   data() {
@@ -50,7 +55,7 @@ export default {
     };
   },
   created() {
-    http.get(`/comment/${this.$route.params.articleno}`).then(({ data }) => {
+    api.get(`/comment/${this.$route.params.articleno}`).then(({ data }) => {
       this.comments = data;
     });
   },
@@ -72,7 +77,7 @@ export default {
     },
     deleteComment(commentno) {
       if (confirm("정말 삭제하시겠습니까?")) {
-        http
+        api
           .delete(`comment/` + commentno)
           .then(this.moveList())
           .catch(console.log("comment delete err!"));
@@ -88,6 +93,7 @@ export default {
     },
   },
   computed: {
+    ...mapState(memberStore, ["userInfo"]),
     pageCount() {
       let listLeng = this.articles.length,
         listSize = this.pageSize,

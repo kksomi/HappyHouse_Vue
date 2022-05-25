@@ -10,7 +10,7 @@
         >
           <b-form-input
             id="userid"
-            :disabled="isUserid"
+            readonly="readonly"
             v-model="article.userid"
             type="text"
             required
@@ -42,6 +42,17 @@
             max-rows="15"
           ></b-form-textarea>
         </b-form-group>
+        <b-form-group>
+          <b-form-checkbox
+            id="priority"
+            v-model="article.priority"
+            name="priority"
+            value="1"
+            unchecked-value="0"
+          >
+            중요
+          </b-form-checkbox>
+        </b-form-group>
 
         <b-button
           type="submit"
@@ -60,7 +71,10 @@
 </template>
 
 <script>
-import http from "@/api/http";
+import { writeArticle, getArticle, modifyArticle } from "@/api/board";
+import { mapState } from "vuex";
+
+const memberStore = "memberStore";
 
 export default {
   name: "BoardInputItem",
@@ -71,6 +85,7 @@ export default {
         userid: "",
         subject: "",
         content: "",
+        priority: 0,
       },
       isUserid: false,
     };
@@ -78,16 +93,27 @@ export default {
   props: {
     type: { type: String },
   },
+  computed: {
+    ...mapState(memberStore, ["userInfo"]),
+  },
   created() {
     if (this.type === "modify") {
-      http.get(`/board/${this.$route.params.articleno}`).then(({ data }) => {
-        // this.article.articleno = data.article.articleno;
-        // this.article.userid = data.article.userid;
-        // this.article.subject = data.article.subject;
-        // this.article.content = data.article.content;
-        this.article = data;
-      });
+      getArticle(
+        this.$route.params.articleno,
+        ({ data }) => {
+          // this.article.articleno = data.article.articleno;
+          // this.article.userid = data.article.userid;
+          // this.article.subject = data.article.subject;
+          // this.article.content = data.article.content;
+          this.article = data;
+        },
+        (error) => {
+          console.log(error);
+        },
+      );
       this.isUserid = true;
+    } else {
+      this.article.userid = this.userInfo.id;
     }
   },
   methods: {
@@ -120,33 +146,37 @@ export default {
       this.article.articleno = 0;
       this.article.subject = "";
       this.article.content = "";
-      this.$router.push({ name: "boardList" });
     },
     registArticle() {
-      http
-        .post(`/board`, {
+      writeArticle(
+        {
           userid: this.article.userid,
           subject: this.article.subject,
           content: this.article.content,
-        })
-        .then(({ data }) => {
+          priority: this.article.priority,
+        },
+        ({ data }) => {
           let msg = "등록 처리시 문제가 발생했습니다.";
           if (data === "success") {
             msg = "등록이 완료되었습니다.";
           }
           alert(msg);
           this.moveList();
-        });
+        },
+        (error) => {
+          console.log(error);
+        },
+      );
     },
     modifyArticle() {
-      http
-        .put(`/board/${this.article.articleno}`, {
+      modifyArticle(
+        {
           articleno: this.article.articleno,
           userid: this.article.userid,
           subject: this.article.subject,
           content: this.article.content,
-        })
-        .then(({ data }) => {
+        },
+        ({ data }) => {
           let msg = "수정 처리시 문제가 발생했습니다.";
           if (data === "success") {
             msg = "수정이 완료되었습니다.";
@@ -154,7 +184,11 @@ export default {
           alert(msg);
           // 현재 route를 /list로 변경.
           this.$router.push({ name: "boardList" });
-        });
+        },
+        (error) => {
+          console.log(error);
+        },
+      );
     },
     moveList() {
       this.$router.push({ name: "boardList" });

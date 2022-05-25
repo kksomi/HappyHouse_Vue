@@ -3,17 +3,9 @@
     <b-col style="text-align: left">
       <b-form @submit="onSubmit">
         <b-col>
-          <b-form-group id="userid-group" label="작성자:" label-for="userid">
-            <b-form-input
-              id="userid"
-              v-model="comment.userid"
-              type="text"
-              required
-              placeholder="아이디 입력..."
-            ></b-form-input>
-          </b-form-group>
+          작성자 : {{ this.userInfo.id }}
 
-          <b-form-group id="content-group" label="내용:" label-for="content">
+          <b-form-group id="content-group" label-for="content">
             <b-form-textarea
               id="content"
               v-model="comment.content"
@@ -38,7 +30,12 @@
 </template>
 
 <script>
-import http from "@/api/http";
+import apiInstance from "@/api/index.js";
+import { mapState } from "vuex";
+
+const memberStore = "memberStore";
+
+const api = apiInstance();
 
 export default {
   name: "CommentWrite",
@@ -57,30 +54,29 @@ export default {
   props: {
     articleno: Number,
   },
+  computed: {
+    ...mapState(memberStore, ["userInfo"]),
+  },
   methods: {
     onSubmit(event) {
       event.preventDefault();
 
       let err = true;
       let msg = "";
-      !this.comment.userid &&
-        ((msg = "작성자 입력해주세요"),
+
+      !this.comment.content &&
+        ((msg = "내용 입력해주세요"),
         (err = false),
-        this.$refs.userid.focus());
-      err &&
-        !this.comment.content &&
-        ((msg = "제목 입력해주세요"),
-        (err = false),
-        this.$refs.subject.focus());
+        this.$refs.content.focus());
 
       if (!err) alert(msg);
       else this.registComment();
     },
     registComment() {
-      http
+      api
         .post(`/comment`, {
           articleno: this.$route.params.articleno,
-          userid: this.comment.userid,
+          userid: this.userInfo.id,
           content: this.comment.content,
         })
         .then(({ data }) => {

@@ -5,7 +5,7 @@ module.exports = {
   },
   extends: [
     "plugin:vue/essential",
-    //"eslint:recommended",
+    "eslint:recommended",
     "plugin:prettier/recommended",
   ],
   parserOptions: {
@@ -25,6 +25,7 @@ module.exports = {
         bracketSpacing: true,
         arrowParens: "always",
         endOfLine: "auto",
+        //endOfLine: "off",
         useTabs: false,
       },
     ],

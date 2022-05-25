@@ -2,7 +2,50 @@ import Vue from "vue";
 import VueRouter from "vue-router";
 import HomeView from "../views/HomeView.vue";
 
+import store from "@/store/index.js";
+
 Vue.use(VueRouter);
+
+// https://router.vuejs.org/kr/guide/advanced/navigation-guards.html
+const onlyAuthUser = async (to, from, next) => {
+  // console.log(store);
+  const checkUserInfo = store.getters["memberStore/checkUserInfo"];
+  const getUserInfo = store._actions["memberStore/getUserInfo"];
+  let token = sessionStorage.getItem("access-token");
+  if (checkUserInfo == null && token) {
+    await getUserInfo(token);
+  }
+  if (checkUserInfo === null) {
+    alert("로그인이 필요한 페이지입니다..");
+    next({ name: "signIn" });
+    // router.push({ name: "signIn" });
+  } else {
+    // console.log("로그인 했다.");
+    next();
+  }
+};
+
+const adminUser = async (to, from, next) => {
+  // console.log(store);
+  const checkUserInfo = store.getters["memberStore/checkUserInfo"];
+  const getUserInfo = store._actions["memberStore/getUserInfo"];
+  let token = sessionStorage.getItem("access-token");
+  if (checkUserInfo == null && token) {
+    await getUserInfo(token);
+  }
+  if (checkUserInfo === null) {
+    alert("로그인이 필요한 페이지입니다..");
+    next({ name: "signIn" });
+    // router.push({ name: "signIn" });
+  } else if (checkUserInfo.role != 1) {
+    alert("관리자만 접근할 수 있는 페이지입니다..");
+    next({ name: "home" });
+    // router.push({ name: "signIn" });
+  } else {
+    // console.log("로그인 했다.");
+    next();
+  }
+};
 
 const routes = [
   {
@@ -25,11 +68,41 @@ const routes = [
         name: "signUp",
         component: () => import("@/components/user/MemberRegister.vue"),
       },
+      {
+        path: "searchpassword",
+        name: "searchPassword",
+        component: () => import("@/components/user/SearchPassword.vue"),
+      },
+      {
+        path: "singout",
+        name: "signOut",
+        beforeEnter: onlyAuthUser,
+        component: () => import("@/components/user/MemberLogout.vue"),
+      },
+      {
+        path: "mypage",
+        name: "mypage",
+        beforeEnter: onlyAuthUser,
+        component: () => import("@/components/user/MemberMyPage.vue"),
+      },
+      {
+        path: "userlist",
+        name: "userList",
+        beforeEnter: adminUser,
+        component: () => import("@/components/user/MemberList.vue"),
+      },
+      {
+        path: "userdelete",
+        name: "userDelete",
+        beforeEnter: onlyAuthUser,
+        component: () => import("@/components/user/MemberDelete.vue"),
+      },
     ],
   },
   {
     path: "/board",
     name: "board",
+    beforeEnter: onlyAuthUser,
     component: () => import("@/views/BoardView.vue"),
     redirect: "/board/list",
     children: [

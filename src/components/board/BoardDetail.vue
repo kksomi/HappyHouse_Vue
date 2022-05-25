@@ -6,7 +6,7 @@
           >목록</b-button
         >
       </b-col>
-      <b-col class="text-right">
+      <b-col class="text-right" v-if="article.userid === userid">
         <b-button
           variant="outline-info"
           size="sm"
@@ -50,15 +50,19 @@
 
 <script>
 // import moment from "moment";
-import http from "@/api/http";
+import { getArticle, deleteArticle, countArticle } from "@/api/board";
 import CommentList from "@/components/comment/CommentList";
 import CommentWrite from "@/components/comment/CommentWrite.vue";
+import { mapState } from "vuex";
+
+const memberStore = "memberStore";
 
 export default {
   name: "BoardDetail",
   data() {
     return {
       article: {},
+      userid: "",
     };
   },
   components: {
@@ -66,11 +70,10 @@ export default {
     CommentWrite,
   },
   props: {
-    articleno: Number,
-    commentno: Number,
-    type: String,
+    articleno: { type: Number },
   },
   computed: {
+    ...mapState(memberStore, ["userInfo"]),
     message() {
       if (this.article.content)
         return this.article.content.split("\n").join("<br>");
@@ -78,9 +81,18 @@ export default {
     },
   },
   created() {
-    http.get(`/board/${this.$route.params.articleno}`).then(({ data }) => {
-      this.article = data;
-    });
+    countArticle(this.$route.params.articleno);
+    getArticle(
+      this.$route.params.articleno,
+      (response) => {
+        this.article = response.data;
+      },
+      (error) => {
+        console.log("불러오기 에러발생!!", error);
+        // eslint-disable-next-line
+      },
+    );
+    this.userid = this.userInfo.id;
   },
   methods: {
     listArticle() {
@@ -95,9 +107,8 @@ export default {
     },
     deleteArticle() {
       if (confirm("정말로 삭제?")) {
-        this.$router.replace({
-          name: "boardDelete",
-          params: { articleno: this.article.articleno },
+        deleteArticle(this.article.articleno, () => {
+          this.$router.push({ name: "boardList" });
         });
       }
     },
